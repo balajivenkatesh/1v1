@@ -1,17 +1,9 @@
 import random
-import sys
 
 from person import Person
+from helpers import print_pairs, read_people
 
-try:
-  with open("people.csv") as f:
-    for line in f:
-      names = line.rstrip().split(",")
-      names.sort()
-      people = [Person(name) for name in names]
-except Exception as e:
-  print(type(e), e)
-  sys.exit(0)
+people = read_people()
 
 print()
 print("people = ", [p.name for p in people])
@@ -28,17 +20,36 @@ print()
 print("Week, P1, P2, out")
 
 remove_q = []
-for i in range(0, 4):
+
+i = 1
+while i < len(people):
   if len(remove_q) == 0 and len(remove_order) > 0:
     remove_q = list(remove_order)
-  remove_person = remove_q.pop(0)
+    print("remove_q reset")
+  if len(remove_q) > 0:
+    remove_person = remove_q.pop(0)
+  else:
+    remove_person = Person("none")
 
   pool = [x for x in people if x.name != remove_person.name]
   random.shuffle(pool)
 
-  while len(pool) > 0:
-    g = pool[:2]
-    print(str(i) + ", " + g[0].name + ", " + g[1].name + ", " + remove_person.name)
-    pool = pool[2:]
+  j = 0
+  break_outer = False
+  while j < len(pool):
+    if pool[j].has_everybody_scheduled(people):
+      pool[j].empty_scheduled()
+    if pool[j].has_scheduled(pool[j+1]):
+      break_outer = True
+      break
+    j += 2
+
+  if break_outer:
+    remove_q.insert(0, remove_person)
+    continue
+
+  print_pairs(i, pool, remove_person)
+  print()
+  i += 1
 
 print()
